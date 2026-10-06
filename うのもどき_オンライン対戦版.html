@@ -1,0 +1,4207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>うのもどき</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+html,body{
+    margin:0;
+    width:100%;
+    min-height:100%;
+    font-family:"Segoe UI","Yu Gothic",sans-serif;
+    background:
+        radial-gradient(circle at center,#09803b,#075d2d 50%,#033b1c);
+    color:white;
+}
+
+body{
+    overflow-x:hidden;
+}
+
+#game{
+    width:100%;
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:120px minmax(0,1fr) 120px;
+    grid-template-rows:65px minmax(0,1fr) 155px;
+    gap:5px;
+    padding:6px;
+}
+
+.topbar{
+    grid-column:1 / 4;
+    grid-row:1;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:4px 10px;
+}
+
+.title{
+    font-size:clamp(22px,3vw,34px);
+    font-weight:1000;
+    letter-spacing:2px;
+    text-shadow:0 3px 5px #0009;
+}
+
+.info{
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+}
+
+.info-box{
+    background:#0007;
+    border:1px solid #ffffff33;
+    border-radius:7px;
+    padding:5px 9px;
+    font-size:12px;
+}
+
+.cpu-player{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.cpu-player.left{
+    grid-column:1;
+    grid-row:2;
+}
+
+.cpu-player.right{
+    grid-column:3;
+    grid-row:2;
+}
+
+.cpu-top{
+    grid-column:2;
+    grid-row:2;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+}
+
+.cpu-box{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+}
+
+.player-name{
+    font-size:13px;
+    font-weight:900;
+    text-align:center;
+}
+
+.cpu-hand{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:70px;
+}
+
+.cpu-hand.vertical{
+    flex-direction:column;
+}
+
+.cpu-hand.vertical .card{
+    margin-top:-45px;
+}
+
+.cpu-hand.vertical .card:first-child{
+    margin-top:0;
+}
+
+.center{
+    grid-column:2;
+    grid-row:2;
+    width:100%;
+    height:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:45px;
+}
+
+.zone{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    min-width:70px;
+}
+
+.zone-label{
+    font-size:13px;
+    font-weight:900;
+    text-shadow:0 2px 3px #000;
+}
+
+.zone-label span{
+    color:#ffe45c;
+}
+
+.card{
+    width:48px;
+    height:68px;
+    border:2px solid white;
+    border-radius:7px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+    flex-shrink:0;
+    user-select:none;
+    box-shadow:
+        0 3px 7px #0009,
+        inset 0 0 0 2px #0002;
+}
+
+.card.red{
+    background:linear-gradient(145deg,#ff4b4b,#c90000);
+}
+
+.card.yellow{
+    background:linear-gradient(145deg,#ffe45c,#dba800);
+    color:#111;
+}
+
+.card.green{
+    background:linear-gradient(145deg,#37df76,#079344);
+}
+
+.card.blue{
+    background:linear-gradient(145deg,#43baff,#0872c9);
+}
+
+.card.black{
+    background:radial-gradient(circle at 35% 30%,#555,#111 70%);
+}
+
+
+.card.back{
+    background:
+        repeating-linear-gradient(
+            45deg,
+            #171717 0,
+            #171717 5px,
+            #292929 5px,
+            #292929 10px
+        );
+}
+
+.card.back::after{
+    content:"UNO";
+    font-size:12px;
+    font-weight:1000;
+    transform:rotate(-25deg);
+}
+
+.card-content{
+    font-size:21px;
+    font-weight:1000;
+    text-align:center;
+    line-height:1.05;
+    text-shadow:0 2px 2px #0008;
+}
+
+.card-corner{
+    position:absolute;
+    left:3px;
+    top:2px;
+    font-size:7px;
+    font-weight:900;
+}
+
+.card-corner.bottom{
+    left:auto;
+    right:3px;
+    top:auto;
+    bottom:2px;
+    transform:rotate(180deg);
+}
+
+.center .card{
+    width:65px;
+    height:92px;
+}
+
+.center .card-content{
+    font-size:25px;
+}
+
+.player-area{
+    grid-column:1 / 4;
+    grid-row:3;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end;
+}
+
+.player-label{
+    font-size:13px;
+    font-weight:900;
+}
+
+.player-hand{
+    width:100%;
+    min-height:90px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    gap:3px;
+    flex-wrap:wrap;
+    padding:4px;
+}
+
+.player-card{
+    cursor:pointer;
+    transition:.15s;
+}
+
+.player-card:hover{
+    transform:translateY(-12px) scale(1.04);
+    z-index:50;
+}
+
+.playable{
+    box-shadow:
+        0 0 9px #fff,
+        0 4px 8px #0008;
+}
+
+.unplayable{
+    filter:brightness(.55) saturate(.6);
+}
+
+.exodia-card{
+    background:
+        linear-gradient(
+            145deg,
+            #70420b,
+            #e4b33f 45%,
+            #8b5a16
+        ) !important;
+
+    border-color:#ffe99a !important;
+
+    box-shadow:
+        0 0 7px #ffcc33,
+        0 0 15px #ffbf0088,
+        inset 0 0 8px #fff07866;
+}
+
+.exodia-card .card-content{
+    font-size:8px;
+    line-height:1.05;
+}
+
+.exodia-symbol{
+    font-size:16px;
+    margin-bottom:3px;
+}
+
+.controls{
+    position:fixed;
+    left:50%;
+    bottom:150px;
+    transform:translateX(-50%);
+    display:flex;
+    gap:6px;
+    z-index:100;
+}
+
+button{
+    border:none;
+    border-radius:7px;
+    padding:7px 12px;
+    font-weight:900;
+    cursor:pointer;
+    color:white;
+    background:#222;
+    box-shadow:0 3px 6px #0008;
+}
+
+button:hover{
+    filter:brightness(1.15);
+}
+
+button:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+}
+
+#drawButton{
+    background:#7d2cff;
+}
+
+#unoButton{
+    background:#e51b23;
+}
+
+#restartButton{
+    background:#0872c9;
+}
+
+#backToMenuButton{
+    position:fixed;
+    top:12px;
+    right:12px;
+    z-index:6500;
+    padding:8px 12px;
+    border-radius:8px;
+    border:1px solid #9bd8ff;
+    background:#123;
+    color:white;
+    font-size:13px;
+    font-weight:900;
+    box-shadow:0 3px 6px #0008;
+}
+
+#backToMenuButton:hover{
+    filter:brightness(1.15);
+}
+
+
+.message{
+    position:fixed;
+    top:70px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#0009;
+    border-radius:8px;
+    padding:5px 12px;
+    font-size:13px;
+    font-weight:900;
+    z-index:500;
+    white-space:nowrap;
+}
+
+.uno-badge{
+    position:fixed;
+    right:15px;
+    top:82px;
+    width:45px;
+    height:45px;
+    background:#e60000;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:1000;
+    font-size:12px;
+    box-shadow:0 0 15px #f00;
+    animation:pulse 1s infinite alternate;
+    z-index:1000;
+}
+
+.hidden{
+    display:none !important;
+}
+
+@keyframes pulse{
+    from{
+        transform:scale(1);
+    }
+    to{
+        transform:scale(1.12);
+    }
+}
+
+#effectLayer{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:3000;
+}
+
+.effect-text{
+    position:absolute;
+    left:50%;
+    top:43%;
+    transform:translate(-50%,-50%) scale(.3);
+    font-size:clamp(40px,9vw,95px);
+    font-weight:1000;
+    font-style:italic;
+    text-shadow:
+        0 5px #000,
+        0 0 20px currentColor;
+    opacity:0;
+    animation:effectPop 1.1s ease-out forwards;
+}
+
+@keyframes effectPop{
+    0%{
+        opacity:0;
+        transform:
+            translate(-50%,-50%)
+            scale(.2)
+            rotate(-8deg);
+    }
+
+    20%{
+        opacity:1;
+        transform:
+            translate(-50%,-50%)
+            scale(1.25)
+            rotate(5deg);
+    }
+
+    70%{
+        opacity:1;
+        transform:
+            translate(-50%,-50%)
+            scale(1)
+            rotate(-2deg);
+    }
+
+    100%{
+        opacity:0;
+        transform:
+            translate(-50%,-60%)
+            scale(1.5);
+    }
+}
+
+.shake{
+    animation:shake .45s ease-in-out;
+}
+
+@keyframes shake{
+    0%,100%{
+        transform:translate(0);
+    }
+
+    20%{
+        transform:translate(-9px);
+    }
+
+    40%{
+        transform:translate(9px);
+    }
+
+    60%{
+        transform:translate(-6px);
+    }
+
+    80%{
+        transform:translate(6px);
+    }
+}
+
+.overlay{
+    position:fixed;
+    inset:0;
+    background:#000b;
+    z-index:5000;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.modal{
+    width:min(90vw,500px);
+    padding:28px;
+    text-align:center;
+    border-radius:15px;
+    background:
+        linear-gradient(145deg,#174a2d,#082c19);
+    border:2px solid #66ff9c;
+    box-shadow:
+        0 0 35px #00ff6644,
+        0 20px 60px #000;
+}
+
+.modal h1{
+    margin:0 0 15px;
+}
+
+.roulette-name{
+    min-height:70px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:#ffdf45;
+    font-size:38px;
+    font-weight:1000;
+}
+
+.start-button{
+    margin-top:15px;
+    background:#e49b00;
+    font-size:16px;
+}
+
+.color-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+}
+
+.color-button{
+    height:52px;
+    border:2px solid white;
+}
+
+.color-button.red{
+    background:#d60000;
+}
+
+.color-button.yellow{
+    background:#e2ad00;
+    color:#111;
+}
+
+.color-button.green{
+    background:#079344;
+}
+
+.color-button.blue{
+    background:#0872c9;
+}
+
+.win-box{
+    width:min(90vw,540px);
+    padding:30px;
+    text-align:center;
+    border-radius:16px;
+    background:
+        linear-gradient(145deg,#174a2d,#082c19);
+    border:2px solid #66ff9c;
+}
+
+.win-box.exodia-win{
+    border-color:#ffd438;
+    box-shadow:
+        0 0 40px #ffbd00,
+        0 0 100px #ff9d0044;
+}
+
+.win-title{
+    font-size:45px;
+    font-weight:1000;
+}
+
+.exodia-win-title{
+    color:#ffd43b;
+    text-shadow:0 0 25px #ff8c00;
+    animation:glow 1s infinite alternate;
+}
+
+@keyframes glow{
+    from{
+        text-shadow:0 0 10px #ff8c00;
+    }
+
+    to{
+        text-shadow:
+            0 0 30px white,
+            0 0 50px #ff8c00;
+    }
+}
+
+.exodia-particle{
+    position:fixed;
+    left:50%;
+    top:50%;
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#ffd83d;
+    box-shadow:0 0 12px #ffae00;
+    pointer-events:none;
+    z-index:6000;
+    animation:particle 1.5s ease-out forwards;
+}
+
+@keyframes particle{
+    0%{
+        transform:translate(0,0) scale(1);
+        opacity:1;
+    }
+
+    100%{
+        transform:
+            translate(
+                calc((var(--x) - 50) * 10px),
+                calc((var(--y) - 50) * 10px)
+            )
+            scale(0);
+        opacity:0;
+    }
+}
+
+@media(max-width:700px){
+
+    #game{
+        grid-template-columns:
+            65px
+            minmax(0,1fr)
+            65px;
+
+        grid-template-rows:
+            55px
+            minmax(0,1fr)
+            135px;
+    }
+
+    .card{
+        width:40px;
+        height:58px;
+    }
+
+    .card-content{
+        font-size:16px;
+    }
+
+    .center{
+        gap:20px;
+    }
+
+    .center .card{
+        width:52px;
+        height:74px;
+    }
+
+    .center .card-content{
+        font-size:19px;
+    }
+
+    .controls{
+        bottom:135px;
+    }
+
+    .message{
+        top:58px;
+        max-width:90vw;
+        font-size:11px;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+
+    .info-box{
+        display:none;
+    }
+
+    .title{
+        font-size:20px;
+    }
+}
+
+
+#turn-indicator{
+    margin:10px auto 14px;
+    padding:10px 18px;
+    width:max-content;
+    max-width:90%;
+    border:2px solid rgba(255,255,255,.45);
+    border-radius:999px;
+    background:rgba(0,0,0,.35);
+    color:#fff;
+    font-size:20px;
+    font-weight:800;
+    text-align:center;
+    box-shadow:0 4px 14px rgba(0,0,0,.2);
+}
+
+
+#menuOverlay{
+    z-index:7000;
+    background:radial-gradient(circle at center,#0a8f45,#043b1d 65%,#021b0d);
+}
+
+.menu-box{
+    width:min(92vw,560px);
+    padding:42px 30px 34px;
+    text-align:center;
+    border-radius:22px;
+    background:linear-gradient(145deg,#123e27,#061f12);
+    border:2px solid #66ff9c;
+    box-shadow:0 0 45px #00ff6655,0 20px 70px #000;
+}
+
+.menu-title{
+    margin:0;
+    font-size:clamp(38px,9vw,68px);
+    font-weight:1000;
+    letter-spacing:3px;
+    text-shadow:0 5px 0 #0008,0 0 24px #4dff91;
+}
+
+.menu-subtitle{
+    margin:8px 0 28px;
+    color:#ffe45c;
+    font-size:18px;
+    font-weight:900;
+}
+
+.menu-start{
+    min-width:190px;
+    padding:13px 24px;
+    font-size:19px;
+    background:linear-gradient(145deg,#e6a800,#b86d00);
+    border:2px solid #ffe89a;
+}
+
+
+.menu-main-buttons{display:flex;flex-direction:column;gap:12px;align-items:center;}
+.menu-main-btn{min-width:210px;padding:13px 24px;font-size:19px;background:linear-gradient(145deg,#e6a800,#b86d00);border:2px solid #ffe89a;}
+.menu-secondary{background:linear-gradient(145deg,#0872c9,#064b87);border-color:#9bd8ff;}
+.menu-back{margin-top:18px;background:#333;border:1px solid #aaa;}
+.settings-box{max-width:520px;}
+.settings-title{margin:0 0 22px;font-size:32px;}
+.settings-row{display:flex;justify-content:space-between;align-items:center;gap:25px;padding:14px 0;border-bottom:1px solid #ffffff33;font-weight:800;}
+.settings-select{min-width:130px;padding:9px 12px;border-radius:8px;border:1px solid #9bd8ff;background:#123;color:white;font-weight:900;font-size:16px;}
+
+/* オンライン対戦 */
+.online-box{max-width:620px;}
+.online-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px;}
+.online-input{width:min(100%,330px);padding:12px 14px;border-radius:9px;border:1px solid #9bd8ff;background:#081b12;color:#fff;font-size:18px;font-weight:800;text-align:center;}
+.online-code{font-size:34px;letter-spacing:7px;font-weight:1000;color:#ffe45c;margin:12px 0;}
+.online-status{min-height:28px;margin:10px 0;color:#dfffea;font-weight:800;}
+.online-list{margin:12px auto;padding:0;list-style:none;max-width:430px;text-align:left;}
+.online-list li{padding:8px 12px;border-bottom:1px solid #ffffff22;}
+.online-small{font-size:13px;color:#c9d8cf;}
+.online-primary{background:linear-gradient(145deg,#0872c9,#064b87);border-color:#9bd8ff;}
+.online-danger{background:linear-gradient(145deg,#9d2d2d,#651717);border-color:#ffaaaa;}
+#onlineBadge{display:none;position:fixed;left:8px;bottom:8px;z-index:6200;padding:7px 11px;border-radius:9px;background:#061b10dd;border:1px solid #66ff9c;font-weight:900;font-size:12px;}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+
+<body>
+
+<button id="backToMenuButton" type="button">メニューへ戻る</button>
+
+<div id="turn-indicator">現在のターン：—</div>
+
+
+<div id="game">
+
+    <div class="topbar">
+
+        <div class="title">
+            UNO
+        </div>
+
+        <div class="info">
+
+            <div class="info-box">
+                ターン:
+                <span id="turnText">準備中</span>
+            </div>
+
+            <div class="info-box">
+                山札:
+                <span id="deckCount">0</span>
+            </div>
+
+            <div class="info-box">
+                場:
+                <span id="discardCount">0</span>
+            </div>
+
+            <div class="info-box">
+                エグゾディア:
+                <span id="exodiaCount">0 / 5</span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="cpu-player left">
+
+        <div class="cpu-box">
+
+            <div class="player-name">
+                CPU 1
+                <span id="cpu1Count">7</span>枚
+            </div>
+
+            <div
+                id="cpu1Hand"
+                class="cpu-hand vertical">
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="cpu-top">
+
+        <div class="cpu-box">
+
+            <div class="player-name">
+                CPU 2
+                <span id="cpu2Count">7</span>枚
+            </div>
+
+            <div
+                id="cpu2Hand"
+                class="cpu-hand">
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="cpu-player right">
+
+        <div class="cpu-box">
+
+            <div class="player-name">
+                CPU 3
+                <span id="cpu3Count">7</span>枚
+            </div>
+
+            <div
+                id="cpu3Hand"
+                class="cpu-hand vertical">
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="center">
+
+        <div class="zone">
+
+            <div class="zone-label">
+                山札
+            </div>
+
+            <div
+                id="deckCard"
+                class="card back">
+            </div>
+
+        </div>
+
+        <div class="zone">
+
+            <div class="zone-label">
+                場
+                <span id="currentColorText"></span>
+            </div>
+
+            <div id="discardCard"></div>
+
+        </div>
+
+    </div>
+
+    <div
+        id="message"
+        class="message">
+        ゲーム開始準備中...
+    </div>
+
+    <div class="controls">
+
+        <button id="drawButton">
+            カードを引く
+        </button>
+        <button id="unoButton">
+            UNO!
+        </button>
+
+        <button id="restartButton">
+            リスタート
+        </button>
+
+    </div>
+
+    <div class="player-area">
+
+        <div class="player-label">
+
+            あなた　
+            <span id="playerCount">7</span>枚
+
+        </div>
+
+        <div
+            id="playerHand"
+            class="player-hand">
+        </div>
+
+    </div>
+
+</div>
+
+<div
+    id="unoBadge"
+    class="uno-badge hidden">
+    UNO!
+</div>
+
+<div
+    id="menuOverlay"
+    class="overlay">
+
+    <div class="menu-box">
+        <h1 class="menu-title">うのもどき</h1>
+        <div class="menu-subtitle">EXODIA EDITION</div>
+        <button id="menuStartButton" class="menu-start">メニューへ</button>
+    </div>
+
+</div>
+
+<div id="mainMenuOverlay" class="overlay hidden">
+    <div class="menu-box">
+        <h1 class="settings-title">メニュー</h1>
+        <div class="menu-main-buttons">
+            <button id="mainGameStartButton" class="menu-main-btn">ゲーム開始</button>
+            <button id="onlineButton" class="menu-main-btn online-primary">オンライン対戦</button>
+            <button id="settingsButton" class="menu-main-btn menu-secondary">設定</button>
+        </div>
+    </div>
+</div>
+
+<div id="settingsOverlay" class="overlay hidden">
+    <div class="menu-box settings-box">
+        <h1 class="settings-title">設定</h1>
+        <div class="settings-row"><span>CPU人数</span><select id="cpuCountSelect" class="settings-select"><option value="1">1人</option><option value="2">2人</option><option value="3" selected>3人</option></select></div>
+        <div class="settings-row"><span>ゲームルール</span><span>UNO / EXODIA</span></div>
+        <button id="settingsBackButton" class="menu-main-btn menu-back">メニューに戻る</button>
+    </div>
+</div>
+
+<div id="onlineOverlay" class="overlay hidden">
+    <div class="menu-box online-box">
+        <h1 class="settings-title">オンライン対戦</h1>
+        <div id="onlineStatus" class="online-status">部屋を作るか、ルームコードで参加してください。</div>
+        <div id="onlineHomePanel">
+            <input id="onlineNameInput" class="online-input" maxlength="12" placeholder="プレイヤー名" value="プレイヤー">
+            <div class="online-actions">
+                <button id="onlineHostButton" class="menu-main-btn online-primary">部屋を作る</button>
+                <button id="onlineJoinButton" class="menu-main-btn">部屋に参加</button>
+            </div>
+            <div class="online-actions">
+                <input id="onlineRoomInput" class="online-input" maxlength="8" placeholder="ルームコード">
+            </div>
+        </div>
+        <div id="onlineRoomPanel" class="hidden">
+            <div class="online-small">ルームコード</div>
+            <div id="onlineRoomCode" class="online-code">--------</div>
+            <div id="onlineRoleText" class="online-small"></div>
+            <ul id="onlinePlayerList" class="online-list"></ul>
+            <div class="online-actions">
+                <button id="onlineStartButton" class="menu-main-btn online-primary">ゲーム開始</button>
+                <button id="onlineLeaveButton" class="menu-main-btn online-danger">退出</button>
+            </div>
+        </div>
+        <button id="onlineBackButton" class="menu-main-btn menu-back">メニューに戻る</button>
+    </div>
+</div>
+
+<div id="onlineBadge">ONLINE</div>
+
+<div
+    id="rouletteOverlay"
+    class="overlay">
+
+    <div class="modal">
+
+        <h1>
+            🎰 最初のプレイヤー
+        </h1>
+
+        <div
+            id="rouletteName"
+            class="roulette-name">
+            ?
+        </div>
+
+        <p>
+            参加プレイヤーの中からルーレットで決定します
+        </p>
+
+        <button
+            id="rouletteStart"
+            class="start-button">
+            ルーレット開始
+        </button>
+
+    </div>
+
+</div>
+
+<div
+    id="colorOverlay"
+    class="overlay hidden">
+
+    <div class="modal">
+
+        <h2>
+            色を選択
+        </h2>
+
+        <div class="color-buttons">
+
+            <button
+                class="color-button red"
+                data-color="red">
+                🔴 赤
+            </button>
+
+            <button
+                class="color-button yellow"
+                data-color="yellow">
+                🟡 黄
+            </button>
+
+            <button
+                class="color-button green"
+                data-color="green">
+                🟢 緑
+            </button>
+
+            <button
+                class="color-button blue"
+                data-color="blue">
+                🔵 青
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div
+    id="winOverlay"
+    class="overlay hidden">
+
+    <div
+        id="winBox"
+        class="win-box">
+
+        <div
+            id="winTitle"
+            class="win-title">
+            YOU WIN!
+        </div>
+
+        <p id="winMessage"></p>
+
+        <button id="winRestart">
+            もう一度遊ぶ
+        </button>
+
+    </div>
+
+</div>
+
+<div id="effectLayer"></div>
+
+<script>
+
+const COLORS = [
+    "red",
+    "yellow",
+    "green",
+    "blue"
+];
+
+const COLOR_NAMES = {
+    red:"赤",
+    yellow:"黄",
+    green:"緑",
+    blue:"青"
+};
+
+const EXODIA_PARTS = [
+
+    {
+        id:"left_arm",
+        name:"封印されし左腕",
+        symbol:"🦾"
+    },
+
+    {
+        id:"right_arm",
+        name:"封印されし右腕",
+        symbol:"🦾"
+    },
+
+    {
+        id:"left_leg",
+        name:"封印されし左脚",
+        symbol:"🦵"
+    },
+
+    {
+        id:"right_leg",
+        name:"封印されし右脚",
+        symbol:"🦵"
+    },
+
+    {
+        id:"head",
+        name:"封印されしエクゾディア",
+        symbol:"👑"
+    }
+
+];
+
+let cpuCount = 3;
+
+const players = [
+
+    {
+        id:0,
+        name:"あなた",
+        type:"human",
+        hand:[],
+        finished:false
+    },
+
+    {
+        id:1,
+        name:"CPU 1",
+        type:"cpu",
+        hand:[],
+        finished:false
+    },
+
+    {
+        id:2,
+        name:"CPU 2",
+        type:"cpu",
+        hand:[],
+        finished:false
+    },
+
+    {
+        id:3,
+        name:"CPU 3",
+        type:"cpu",
+        hand:[],
+        finished:false
+    }
+
+];
+
+let deck = [];
+
+let discardPile = [];
+
+let currentPlayer = 0;
+
+let direction = 1;
+
+let currentColor = null;
+
+let pendingDraw = 0;
+
+let pendingDrawSource = null;
+
+let gameStarted = false;
+
+let gameOver = false;
+
+let awaitingColor = false;
+
+let rouletteRunning = false;
+
+let playerSaidUno = false;
+
+let unoPenaltyApplied = false;
+
+let unoProcessing = false;
+
+let exodiaReturnCard = null;
+
+let cpuProcessing = false;
+
+let cpuTimer = null;
+
+/* オンライン対戦 */
+let onlineMode = false;
+let onlineIsHost = false;
+let onlinePeer = null;
+let onlineConnections = {};
+let onlinePlayerSlot = 0;
+let onlinePlayerCount = 1;
+let onlineRoomCode = "";
+let onlineName = "プレイヤー";
+let onlineReady = false;
+let onlineColorMode = null;
+let onlineStarting = false;
+
+
+
+/*
+ * 役カード上がりペナルティ
+ *
+ * 最後に出したカードが役カードなら
+ * 2枚引いてゲーム続行。
+ */
+const PENALTY_DRAW_COUNT = 2;
+
+
+/*
+ * 役カード判定
+ *
+ * 対象:
+ * SKIP
+ * REVERSE
+ * DRAW2
+ * WILD
+ * DRAW4
+ *
+ * エグゾディアは対象外。
+ */
+function isActionCard(card){
+
+    if(!card){
+        return false;
+    }
+
+    return [
+        "skip",
+        "reverse",
+        "draw2",
+        "wild",
+        "draw4"
+    ].includes(card.type);
+}
+
+
+const playerHandEl =
+    document.getElementById("playerHand");
+
+const cpuHands = [
+
+    document.getElementById("cpu1Hand"),
+
+    document.getElementById("cpu2Hand"),
+
+    document.getElementById("cpu3Hand")
+
+];
+
+const cpuCounts = [
+
+    document.getElementById("cpu1Count"),
+
+    document.getElementById("cpu2Count"),
+
+    document.getElementById("cpu3Count")
+
+];
+
+const playerCountEl =
+    document.getElementById("playerCount");
+
+const discardCardEl =
+    document.getElementById("discardCard");
+
+const deckCardEl =
+    document.getElementById("deckCard");
+
+const deckCountEl =
+    document.getElementById("deckCount");
+
+const discardCountEl =
+    document.getElementById("discardCount");
+
+const turnTextEl =
+    document.getElementById("turnText");
+
+const currentColorTextEl =
+    document.getElementById("currentColorText");
+
+const exodiaCountEl =
+    document.getElementById("exodiaCount");
+
+const messageEl =
+    document.getElementById("message");
+
+const unoBadge =
+    document.getElementById("unoBadge");
+
+const effectLayer =
+    document.getElementById("effectLayer");
+
+const menuOverlay =
+    document.getElementById("menuOverlay");
+
+const menuStartButton =
+    document.getElementById("menuStartButton");
+
+const cpuCountSelect =
+    document.getElementById("cpuCountSelect");
+
+const rouletteOverlay =
+    document.getElementById("rouletteOverlay");
+
+const rouletteName =
+    document.getElementById("rouletteName");
+
+const colorOverlay =
+    document.getElementById("colorOverlay");
+
+const winOverlay =
+    document.getElementById("winOverlay");
+
+const winBox =
+    document.getElementById("winBox");
+
+const winTitle =
+    document.getElementById("winTitle");
+
+const winMessage =
+    document.getElementById("winMessage");
+
+const drawButton =
+    document.getElementById("drawButton");
+
+
+const unoButton =
+    document.getElementById("unoButton");
+
+const restartButton =
+    document.getElementById("restartButton");
+
+const backToMenuButton =
+    document.getElementById("backToMenuButton");
+
+
+function createDeck(){
+
+    const cards = [];
+
+    let id = 0;
+
+    COLORS.forEach(color => {
+
+        cards.push({
+            id:id++,
+            type:"number",
+            color:color,
+            value:0
+        });
+
+        for(let value=1; value<=9; value++){
+
+            for(let i=0; i<2; i++){
+
+                cards.push({
+                    id:id++,
+                    type:"number",
+                    color:color,
+                    value:value
+                });
+
+            }
+
+        }
+
+        for(let i=0; i<2; i++){
+
+            cards.push({
+                id:id++,
+                type:"skip",
+                color:color,
+                value:"SKIP"
+            });
+
+            cards.push({
+                id:id++,
+                type:"reverse",
+                color:color,
+                value:"REVERSE"
+            });
+
+            cards.push({
+                id:id++,
+                type:"draw2",
+                color:color,
+                value:"DRAW2"
+            });
+
+        }
+
+    });
+
+    for(let i=0; i<4; i++){
+
+        cards.push({
+            id:id++,
+            type:"wild",
+            color:null,
+            value:"WILD"
+        });
+
+        cards.push({
+            id:id++,
+            type:"draw4",
+            color:null,
+            value:"DRAW4"
+        });
+
+    }
+    EXODIA_PARTS.forEach(part => {
+
+        cards.push({
+            id:id++,
+            type:"exodia",
+            color:null,
+            value:part.id,
+            name:part.name,
+            symbol:part.symbol
+        });
+
+    });
+
+    return cards;
+}
+
+
+function shuffle(array){
+
+    for(let i=array.length-1; i>0; i--){
+
+        const j =
+            Math.floor(
+                Math.random() * (i+1)
+            );
+
+        [
+            array[i],
+            array[j]
+        ] =
+        [
+            array[j],
+            array[i]
+        ];
+    }
+
+    return array;
+}
+
+
+function drawFromDeck(){
+
+    if(deck.length===0){
+
+        refillDeck();
+
+    }
+
+    if(deck.length===0){
+
+        return null;
+    }
+
+    return deck.pop();
+}
+
+
+function refillDeck(){
+
+    if(discardPile.length<=1){
+        return;
+    }
+
+    const top =
+        discardPile.pop();
+
+    deck =
+        shuffle(
+            discardPile.splice(0)
+        );
+
+    discardPile.push(top);
+}
+
+
+function initializeGame(){
+
+    if(cpuTimer){
+
+        clearTimeout(cpuTimer);
+
+        cpuTimer = null;
+    }
+
+    deck =
+        shuffle(
+            createDeck()
+        );
+
+    discardPile = [];
+
+    players.forEach(player => {
+
+        player.hand = [];
+        player.finished = false;
+
+    });
+
+    currentPlayer = 0;
+
+    direction = 1;
+
+    currentColor = null;
+
+    pendingDraw = 0;
+
+    pendingDrawSource = null;
+
+    gameStarted = false;
+
+    gameOver = false;
+
+    awaitingColor = false;
+
+    rouletteRunning = false;
+
+    cpuProcessing = false;
+
+    playerSaidUno = false;
+
+    unoPenaltyApplied = false;
+
+    unoProcessing = false;
+
+    exodiaReturnCard = null;
+
+    for(let i=0; i<7; i++){
+
+        players.forEach((player, index) => {
+
+            const active = onlineMode ? index < onlinePlayerCount : index <= cpuCount;
+            if(!active){ return; }
+
+            const card =
+                drawFromDeck();
+
+            if(card){
+                player.hand.push(card);
+            }
+
+        });
+
+    }
+
+    const exodiaWinner =
+        findExodiaWinner();
+
+    if(exodiaWinner && exodiaWinner.type==="human"){
+
+        render();
+
+        setTimeout(() => {
+
+            exodiaVictory(
+                exodiaWinner
+            );
+
+        },100);
+
+        return;
+    }
+
+    let firstCard = null;
+
+    while(deck.length>0){
+
+        const candidate =
+            drawFromDeck();
+
+        if(!candidate){
+            break;
+        }
+
+        if(
+            candidate.type !== "wild" &&
+            candidate.type !== "draw4" &&
+            candidate.type !== "exodia"
+        ){
+
+            firstCard =
+                candidate;
+
+            break;
+        }
+
+        deck.unshift(candidate);
+    }
+
+    if(firstCard){
+
+        discardPile.push(
+            firstCard
+        );
+
+        currentColor =
+            firstCard.color;
+    }
+
+    render();
+
+    showMessage(
+        "ルーレットで最初のプレイヤーを決定します。"
+    );
+}
+
+
+function hasFullExodia(hand){
+
+    return EXODIA_PARTS.every(part => {
+
+        return hand.some(card => {
+
+            return (
+                card &&
+                card.type==="exodia" &&
+                card.value===part.id
+            );
+
+        });
+
+    });
+}
+
+
+function findExodiaWinner(){
+
+    for(const player of players){
+
+        if(hasFullExodia(player.hand)){
+
+            return player;
+
+        }
+
+    }
+
+    return null;
+}
+
+
+function checkExodia(player){
+
+    if(gameOver){
+        return true;
+    }
+
+    if(hasFullExodia(player.hand)){
+
+        exodiaVictory(player);
+
+        return true;
+    }
+
+    return false;
+}
+
+
+function exodiaVictory(player){
+
+    /* CPUがエグゾディアを完成させてもラウンドは終了しない */
+    if(player.type!=="human"){
+        return;
+    }
+
+    if(gameOver){
+        return;
+    }
+
+    gameOver = true;
+
+    gameStarted = false;
+
+    awaitingColor = false;
+
+    cpuProcessing = false;
+
+    if(cpuTimer){
+
+        clearTimeout(cpuTimer);
+
+        cpuTimer = null;
+    }
+
+    colorOverlay
+        .classList
+        .add("hidden");
+
+    showEffect(
+        "EXODIA!",
+        "#ffd43b"
+    );
+
+    shakeScreen();
+
+    for(let i=0; i<90; i++){
+
+        const particle =
+            document.createElement("div");
+
+        particle.className =
+            "exodia-particle";
+
+        particle.style.setProperty(
+            "--x",
+            Math.random()*100
+        );
+
+        particle.style.setProperty(
+            "--y",
+            Math.random()*100
+        );
+
+        effectLayer.appendChild(
+            particle
+        );
+
+        setTimeout(() => {
+
+            particle.remove();
+
+        },1600);
+    }
+
+    showMessage(
+        `${player.name}がエグゾディアを完成させた！`
+    );
+
+    setTimeout(() => {
+
+        winOverlay
+            .classList
+            .remove("hidden");
+
+        winBox
+            .classList
+            .add("exodia-win");
+
+        winTitle
+            .classList
+            .add("exodia-win-title");
+
+        winTitle.textContent =
+            "EXODIA WIN!";
+
+        winMessage.textContent =
+            `${player.name}がエグゾディア5枚を揃えました！`;
+
+    },700);
+
+    render();
+}
+
+
+function normalVictory(player){
+
+    /* CPUが手札を使い切ってもラウンドは終了しない */
+    if(player.type!=="human"){
+        return;
+    }
+
+    if(gameOver){
+        return;
+    }
+
+    gameOver = true;
+
+    gameStarted = false;
+
+    if(cpuTimer){
+
+        clearTimeout(cpuTimer);
+
+        cpuTimer = null;
+    }
+
+    setTimeout(() => {
+
+        winOverlay
+            .classList
+            .remove("hidden");
+
+        winBox
+            .classList
+            .remove("exodia-win");
+
+        winTitle
+            .classList
+            .remove("exodia-win-title");
+
+        winTitle.textContent =
+            player.type==="human"
+                ? "YOU WIN!"
+                : "ROUND WIN!";
+
+        winMessage.textContent =
+            `${player.name}が手札をすべて使い切りました！`;
+
+    },300);
+}
+
+
+/*
+ * 役カードで上がった場合のペナルティ
+ *
+ * 通常の役カードを最後に出した場合、
+ * 勝利にはせず2枚引かせてゲーム続行。
+ */
+function actionCardFinishPenalty(player, card){
+
+    showEffect(
+        "PENALTY!",
+        "#ff3030"
+    );
+
+    shakeScreen();
+
+    showMessage(
+        `${player.name}は役カードで上がったため、ペナルティとして2枚引きます！`
+    );
+
+    for(let i=0; i<PENALTY_DRAW_COUNT; i++){
+
+        const penaltyCard =
+            drawFromDeck();
+
+        if(penaltyCard){
+
+            player.hand.push(
+                penaltyCard
+            );
+
+        }
+
+    }
+
+    /*
+     * ここでエグゾディアが完成した場合は
+     * エグゾディア勝利を優先。
+     */
+    if(hasFullExodia(player.hand)){
+
+        exodiaVictory(player);
+
+        return true;
+    }
+
+    return false;
+}
+
+
+function canPlay(card){
+
+    if(!card){
+        return false;
+    }
+
+    if(card.type==="exodia"){
+        return true;
+    }
+    if(
+        card.type==="wild" ||
+        card.type==="draw4"
+    ){
+
+        return true;
+    }
+
+    const top =
+        getTopCard();
+
+    if(!top){
+        return true;
+    }
+
+    if(card.color===currentColor){
+        return true;
+    }
+
+    if(
+        card.type===top.type &&
+        card.value===top.value
+    ){
+
+        return true;
+    }
+
+    return false;
+}
+
+
+function getTopCard(){
+
+    if(discardPile.length===0){
+        return null;
+    }
+
+    return discardPile[
+        discardPile.length-1
+    ];
+}
+
+
+function playerPlay(index, playerIndex=0){
+
+    if(
+        !gameStarted ||
+        gameOver ||
+        currentPlayer!==playerIndex ||
+        awaitingColor
+    ){
+
+        return;
+    }
+
+    const player =
+        players[playerIndex];
+
+    if(!player){ return; }
+
+    const card =
+        player.hand[index];
+
+    if(!card){
+        return;
+    }
+
+    if(!canPlay(card)){
+
+        showMessage(
+            "そのカードは出せません。"
+        );
+
+        return;
+    }
+
+    player.hand.splice(
+        index,
+        1
+    );
+
+    /* カウンター後の追加ターンでカードを出したので、
+       追加ターン専用スキップ状態を解除する。 */
+
+    /*
+     * エグゾディア単体
+     */
+    if(card.type==="exodia"){
+
+        exodiaReturnCard =
+            card;
+
+        showMessage(
+            `${card.name}をワイルドとして使用！`
+        );
+
+        openColorSelection(
+            "exodia"
+        );
+
+        render();
+
+        return;
+    }
+
+    discardPile.push(card);
+
+    if(card.color){
+
+        currentColor =
+            card.color;
+    }
+
+    if(card.type==="wild"){
+
+        /*
+         * WILDはドロー系カードの上に重ねても、
+         * ドロー効果を引き継がず「WILD単体」として機能する。
+         * そのため、累積ドローをここで解除する。
+         */
+        if(pendingDraw > 0){
+            pendingDraw = 0;
+            pendingDrawSource = null;
+        }
+
+        showEffect(
+            "WILD!",
+            "#ffffff"
+        );
+
+        openColorSelection(
+            "wild"
+        );
+
+        render();
+
+        return;
+    }
+
+    if(card.type==="draw4"){
+
+        pendingDraw += 4;
+        pendingDrawSource = player;
+
+        showEffect(
+            "+4!",
+            "#ff43d0"
+        );
+
+        shakeScreen();
+
+        openColorSelection(
+            "draw4"
+        );
+
+        render();
+
+        return;
+    }
+
+    if(card.type==="draw2"){
+
+        pendingDraw += 2;
+        pendingDrawSource = player;
+
+        showEffect(
+            "+2!",
+            "#ffb300"
+        );
+
+        shakeScreen();
+    }
+
+    if(card.type==="skip"){
+
+        showEffect(
+            "SKIP!",
+            "#ff5252"
+        );
+    }
+
+    if(card.type==="reverse"){
+
+        showEffect(
+            "REVERSE!",
+            "#4db8ff"
+        );
+
+        direction *= -1;
+    }
+
+    /*
+     * ★役カードで手札0枚
+     *
+     * ここで即勝利しない。
+     * 2枚引いてゲームを続行する。
+     */
+    if(player.hand.length===0){
+
+        if(isActionCard(card)){
+
+            const ended =
+                actionCardFinishPenalty(
+                    player,
+                    card
+                );
+
+            if(ended){
+
+                render();
+
+                return;
+            }
+
+            /*
+             * ペナルティで2枚増えたので
+             * 通常のターン処理へ進む。
+             */
+
+        }else{
+
+            normalVictory(player);
+
+            render();
+
+            return;
+        }
+    }
+
+    if(player.hand.length===1){
+
+        playerSaidUno = false;
+
+        unoPenaltyApplied = false;
+
+        showMessage(
+            "残り1枚！UNOを宣言してください！"
+        );
+    }
+
+    render();
+
+    if(card.type==="skip"){
+
+        nextPlayer();
+
+        nextPlayer();
+
+    }else{
+
+        nextPlayer();
+
+    }
+
+    resetUnoState();
+
+    render();
+
+    startCurrentTurn();
+}
+
+
+function openColorSelection(mode){
+
+    awaitingColor = true;
+
+    colorOverlay
+        .classList
+        .remove("hidden");
+
+    colorOverlay.dataset.mode =
+        mode;
+
+    render();
+}
+
+
+function selectColor(color, playerIndex=0){
+
+    if(!awaitingColor){
+        return;
+    }
+
+    const mode =
+        colorOverlay.dataset.mode;
+
+    currentColor =
+        color;
+
+    awaitingColor = false;
+
+    colorOverlay
+        .classList
+        .add("hidden");
+
+    /*
+     * エグゾディア単体使用
+     */
+    if(mode==="exodia"){
+
+        const card =
+            exodiaReturnCard;
+
+        if(card){
+
+            deck.push(card);
+
+            shuffle(deck);
+
+        }
+
+        exodiaReturnCard =
+            null;
+
+        showMessage(
+            `色は${COLOR_NAMES[color]}！エグゾディアを山札へ戻しました。`
+        );
+
+        nextPlayer();
+
+        resetUnoState();
+
+        render();
+
+        startCurrentTurn();
+
+        return;
+    }
+
+    showMessage(
+        `色は${COLOR_NAMES[color]}！`
+    );
+
+    /*
+     * +4 / WILDを最後の1枚として出した場合
+     *
+     * UNOルール上の通常勝利ではなく、
+     * ここでも役カード上がりペナルティを適用。
+     */
+    const player =
+        players[playerIndex];
+
+    if(
+        player.hand.length===0 &&
+        mode !== "exodia"
+    ){
+
+        const top =
+            getTopCard();
+
+        if(
+            top &&
+            isActionCard(top)
+        ){
+
+            const ended =
+                actionCardFinishPenalty(
+                    player,
+                    top
+                );
+
+            if(ended){
+
+                render();
+
+                return;
+            }
+        }
+    }
+
+    nextPlayer();
+
+    resetUnoState();
+
+    render();
+
+    startCurrentTurn();
+}
+
+
+function nextPlayer(){
+
+    const playerCount =
+        onlineMode ? onlinePlayerCount : cpuCount + 1;
+
+    currentPlayer =
+        (
+            currentPlayer +
+            direction +
+            playerCount
+        ) % playerCount;
+}
+
+
+function resetUnoState(){
+
+    playerSaidUno = false;
+
+    unoPenaltyApplied = false;
+
+    unoProcessing = false;
+
+    unoBadge
+        .classList
+        .add("hidden");
+}
+
+
+function startCurrentTurn(){
+
+    if(
+        gameOver ||
+        !gameStarted
+    ){
+
+        return;
+    }
+
+    render();
+
+    const player =
+        players[currentPlayer];
+
+    if(player.type==="cpu" && player.finished){
+
+        nextPlayer();
+        resetUnoState();
+        render();
+        startCurrentTurn();
+        return;
+    }
+
+    if(player.type==="human"){
+
+        showMessage(
+            "あなたのターンです。"
+        );
+
+        return;
+    }
+
+    if(cpuTimer){
+
+        clearTimeout(cpuTimer);
+    }
+
+    cpuTimer =
+        setTimeout(() => {
+
+            cpuTimer = null;
+
+            cpuTurn();
+
+        },650);
+}
+
+
+function cpuTurn(){
+
+    if(
+        gameOver ||
+        !gameStarted ||
+        currentPlayer===0
+    ){
+
+        return;
+    }
+
+    if(cpuProcessing){
+        return;
+    }
+
+    cpuProcessing = true;
+
+    const cpu =
+        players[currentPlayer];
+
+    if(cpu.finished){
+
+        cpuProcessing = false;
+        nextPlayer();
+        resetUnoState();
+        render();
+        startCurrentTurn();
+        return;
+    }
+
+    if(hasFullExodia(cpu.hand)){
+
+        showMessage(
+            `${cpu.name}がエグゾディアを完成させましたが、プレイヤーが終了するまでゲームを続行します！`
+        );
+
+        cpuProcessing = false;
+
+        nextPlayer();
+
+        resetUnoState();
+
+        render();
+
+        startCurrentTurn();
+
+        return;
+    }
+
+    let playable =
+        cpu.hand
+            .map((card,index)=>({
+                card,
+                index
+            }))
+            .filter(item =>
+                canPlay(item.card)
+            );
+
+    if(playable.length===0){
+
+        cpuDraw();
+
+        return;
+    }
+
+    const priority = {
+
+        exodia:100,
+
+        draw4:90,
+
+        draw2:80,
+
+        skip:70,
+
+        reverse:60,
+
+        wild:50,
+
+        number:10
+
+    };
+
+    playable.sort((a,b)=>{
+
+        return (
+            priority[b.card.type] -
+            priority[a.card.type]
+        );
+
+    });
+
+    playCpuCard(
+        playable[0].index
+    );
+}
+
+
+function cpuDraw(){
+
+    const cpu =
+        players[currentPlayer];
+
+    const amount =
+        pendingDraw>0
+            ? pendingDraw
+            : 1;
+
+    for(let i=0; i<amount; i++){
+
+        const card =
+            drawFromDeck();
+
+        if(card){
+
+            cpu.hand.push(card);
+
+        }
+
+        if(hasFullExodia(cpu.hand)){
+
+            pendingDraw = 0;
+
+            showMessage(
+                `${cpu.name}がエグゾディアを完成させましたが、プレイヤーが終了するまでゲームを続行します！`
+            );
+
+            cpuProcessing = false;
+
+            nextPlayer();
+
+            resetUnoState();
+
+            render();
+
+            startCurrentTurn();
+
+            return;
+        }
+    }
+
+    if(pendingDraw>0){
+
+        showEffect(
+            `${cpu.name} +${amount}`,
+            "#ff9100"
+        );
+
+        pendingDraw = 0;
+        pendingDrawSource = null;
+
+    }else{
+
+        showMessage(
+            `${cpu.name}がカードを1枚引きました。`
+        );
+    }
+
+    render();
+
+    nextPlayer();
+
+    resetUnoState();
+
+    cpuProcessing = false;
+
+    render();
+
+    startCurrentTurn();
+}
+
+
+function playCpuCard(index){
+
+    const cpu =
+        players[currentPlayer];
+
+    const card =
+        cpu.hand[index];
+
+    if(!card){
+
+        cpuProcessing = false;
+
+        return;
+    }
+
+    cpu.hand.splice(
+        index,
+        1
+    );
+
+    /*
+     * エグゾディア単体
+     */
+    if(card.type==="exodia"){
+
+        currentColor =
+            chooseCpuColor(cpu);
+
+        showMessage(
+            `${cpu.name}が${card.name}をワイルドとして使用！`
+        );
+
+        showMessage(
+            `${cpu.name}が${COLOR_NAMES[currentColor]}を選択！`
+        );
+
+        deck.push(card);
+
+        shuffle(deck);
+
+        /*
+         * エグゾディア単体で手札0枚なら
+         * 山札へ戻してから補充。
+         */
+        if(cpu.hand.length===0){
+
+            refillCpuHand(cpu);
+
+            if(gameOver){
+
+                cpuProcessing = false;
+
+                return;
+            }
+        }
+
+        nextPlayer();
+
+        resetUnoState();
+
+        cpuProcessing = false;
+
+        render();
+
+        startCurrentTurn();
+
+        return;
+    }
+
+    discardPile.push(card);
+
+    if(card.color){
+
+        currentColor =
+            card.color;
+    }
+
+    if(card.type==="wild"){
+
+        /*
+         * CPUのWILDもドロー系カードの上に重ねた場合は、
+         * ドロー効果を引き継がずWILD単体として機能する。
+         */
+        if(pendingDraw > 0){
+            pendingDraw = 0;
+            pendingDrawSource = null;
+        }
+
+        showEffect(
+            `${cpu.name} WILD!`,
+            "#ffffff"
+        );
+
+        currentColor =
+            chooseCpuColor(cpu);
+
+        showMessage(
+            `${cpu.name}が${COLOR_NAMES[currentColor]}を選択！`
+        );
+
+        /*
+         * CPUがWILDで上がった場合も
+         * 役カード上がりペナルティ。
+         */
+        if(cpu.hand.length===0){
+
+            const ended =
+                actionCardFinishPenalty(
+                    cpu,
+                    card
+                );
+
+            if(ended){
+
+                cpuProcessing = false;
+
+                render();
+
+                return;
+            }
+        }
+
+        nextPlayer();
+
+        resetUnoState();
+
+        cpuProcessing = false;
+
+        render();
+
+        startCurrentTurn();
+
+        return;
+    }
+
+    if(card.type==="draw4"){
+
+        pendingDraw += 4;
+        pendingDrawSource = cpu;
+
+        showEffect(
+            `${cpu.name} +4!`,
+            "#ff43d0"
+        );
+
+        currentColor =
+            chooseCpuColor(cpu);
+
+        shakeScreen();
+
+        showMessage(
+            `${cpu.name}が${COLOR_NAMES[currentColor]}を選択！`
+        );
+
+        /*
+         * CPUの+4上がりもペナルティ。
+         */
+        if(cpu.hand.length===0){
+
+            const ended =
+                actionCardFinishPenalty(
+                    cpu,
+                    card
+                );
+
+            if(ended){
+
+                cpuProcessing = false;
+
+                render();
+
+                return;
+            }
+        }
+
+        nextPlayer();
+
+        resetUnoState();
+
+        cpuProcessing = false;
+
+        render();
+
+        startCurrentTurn();
+
+        return;
+    }
+
+    if(card.type==="draw2"){
+
+        pendingDraw += 2;
+        pendingDrawSource = cpu;
+
+        showEffect(
+            `${cpu.name} +2!`,
+            "#ffb300"
+        );
+
+        shakeScreen();
+    }
+
+    if(card.type==="skip"){
+
+        showEffect(
+            `${cpu.name} SKIP!`,
+            "#ff5252"
+        );
+    }
+
+    if(card.type==="reverse"){
+
+        showEffect(
+            `${cpu.name} REVERSE!`,
+            "#4db8ff"
+        );
+
+        direction *= -1;
+    }
+
+    /*
+     * CPUが役カードで上がった場合
+     */
+    if(cpu.hand.length===0){
+
+        if(isActionCard(card)){
+
+            const ended =
+                actionCardFinishPenalty(
+                    cpu,
+                    card
+                );
+
+            if(ended){
+
+                cpuProcessing = false;
+
+                render();
+
+                return;
+            }
+
+        }else{
+
+            /*
+             * CPUが手札を使い切ってもラウンドは終了しない。
+             * プレイヤーが終了するまでゲームを続行する。
+             */
+            cpu.finished = true;
+
+            showMessage(
+                `${cpu.name}が上がりました！以後このCPUは操作せず、ゲームを続行します。`
+            );
+
+            cpuProcessing = false;
+
+            nextPlayer();
+
+            resetUnoState();
+
+            render();
+
+            startCurrentTurn();
+
+            return;
+        }
+    }
+
+    if(cpu.hand.length===1){
+
+        showMessage(
+            `${cpu.name}「UNO！」`
+        );
+    }
+
+    if(card.type==="skip"){
+
+        nextPlayer();
+
+        nextPlayer();
+
+    }else{
+
+        nextPlayer();
+
+    }
+
+    resetUnoState();
+
+    cpuProcessing = false;
+
+    render();
+
+    startCurrentTurn();
+}
+
+
+function refillCpuHand(cpu){
+
+    showEffect(
+        `${cpu.name} 補充!`,
+        "#66ff99"
+    );
+
+    showMessage(
+        `${cpu.name}が手札を使い切ったため7枚補充します。`
+    );
+
+    while(cpu.hand.length<7){
+
+        const card =
+            drawFromDeck();
+
+        if(!card){
+
+            break;
+        }
+
+        cpu.hand.push(card);
+
+        if(hasFullExodia(cpu.hand)){
+
+            showMessage(
+                `${cpu.name}がエグゾディアを完成させましたが、プレイヤーが終了するまでゲームを続行します！`
+            );
+
+            return false;
+        }
+    }
+
+    render();
+
+    return false;
+}
+
+
+function chooseCpuColor(cpu){
+
+    const count = {
+
+        red:0,
+        yellow:0,
+        green:0,
+        blue:0
+
+    };
+
+    cpu.hand.forEach(card => {
+
+        if(
+            card.color &&
+            count[card.color] !== undefined
+        ){
+
+            count[
+                card.color
+            ]++;
+
+        }
+
+    });
+
+    let best =
+        COLORS[0];
+
+    COLORS.forEach(color => {
+
+        if(
+            count[color] >
+            count[best]
+        ){
+
+            best =
+                color;
+        }
+
+    });
+
+    return best;
+}
+
+
+function playerDraw(playerIndex=0){
+
+    if(
+        !gameStarted ||
+        gameOver ||
+        currentPlayer!==playerIndex ||
+        awaitingColor
+    ){
+
+        return;
+    }
+
+    const player =
+        players[playerIndex];
+
+    const amount =
+        pendingDraw>0
+            ? pendingDraw
+            : 1;
+
+    for(let i=0; i<amount; i++){
+
+        const card =
+            drawFromDeck();
+
+        if(card){
+
+            player.hand.push(card);
+
+        }
+
+        if(hasFullExodia(player.hand)){
+
+            pendingDraw = 0;
+
+            render();
+
+            exodiaVictory(player);
+
+            return;
+        }
+    }
+
+    if(pendingDraw>0){
+
+        showEffect(
+            `+${amount}`,
+            "#ff9100"
+        );
+
+        pendingDraw = 0;
+        pendingDrawSource = null;
+
+    }else{
+
+        showMessage(
+            "カードを1枚引きました。"
+        );
+    }
+
+    render();
+
+    nextPlayer();
+
+    resetUnoState();
+
+    render();
+
+    startCurrentTurn();
+}
+
+
+
+function playerUno(playerIndex=0){
+
+    if(unoProcessing){
+
+        return;
+    }
+
+    if(
+        !gameStarted ||
+        gameOver ||
+        currentPlayer!==playerIndex
+    ){
+
+        return;
+    }
+
+    if(playerSaidUno){
+
+        return;
+    }
+
+    if(unoPenaltyApplied){
+
+        return;
+    }
+
+    unoProcessing = true;
+
+    const player =
+        players[playerIndex];
+
+    if(player.hand.length===1){
+
+        playerSaidUno = true;
+
+        showMessage(
+            "あなた「UNO！」"
+        );
+
+        unoBadge
+            .classList
+            .remove("hidden");
+
+        render();
+
+        setTimeout(() => {
+
+            unoProcessing = false;
+
+        },300);
+
+        return;
+    }
+
+    unoPenaltyApplied = true;
+
+    showMessage(
+        "誤UNO！ペナルティで2枚ドロー！"
+    );
+
+    showEffect(
+        "PENALTY!",
+        "#ff3030"
+    );
+
+    for(let i=0; i<2; i++){
+
+        const card =
+            drawFromDeck();
+
+        if(card){
+
+            player.hand.push(card);
+
+        }
+
+        if(hasFullExodia(player.hand)){
+
+            render();
+
+            unoProcessing = false;
+
+            exodiaVictory(player);
+
+            return;
+        }
+    }
+
+    render();
+
+    setTimeout(() => {
+
+        unoProcessing = false;
+
+    },400);
+}
+
+
+function createCardElement(
+    card,
+    hidden=false
+){
+
+    const el =
+        document.createElement("div");
+
+    el.classList.add("card");
+
+    if(hidden){
+
+        el.classList.add("back");
+
+        return el;
+    }
+
+    if(card.type==="exodia"){
+
+        el.classList.add(
+            "exodia-card"
+        );
+
+        el.innerHTML = `
+
+            <div class="card-corner">
+                WILD
+            </div>
+
+            <div class="card-content">
+
+                <div class="exodia-symbol">
+                    ${card.symbol}
+                </div>
+
+                ${card.name}
+
+                <br>
+
+                <small>
+                    WILD
+                </small>
+
+            </div>
+
+            <div class="card-corner bottom">
+                WILD
+            </div>
+
+        `;
+
+        return el;
+    }
+
+    if(card.color){
+
+        el.classList.add(
+            card.color
+        );
+
+    }else{
+
+        el.classList.add(
+            "black"
+        );
+    }
+
+    let text = "";
+
+    switch(card.type){
+
+        case "number":
+            text = card.value;
+            break;
+
+        case "skip":
+            text = "⊘";
+            break;
+
+        case "reverse":
+            text = "↻";
+            break;
+
+        case "draw2":
+            text = "+2";
+            break;
+
+        case "wild":
+            text = "WILD";
+            break;
+
+        case "draw4":
+            text = "+4";
+            break;
+    }
+
+    el.innerHTML = `
+
+        <div class="card-corner">
+            ${text}
+        </div>
+
+        <div class="card-content">
+            ${text}
+        </div>
+
+        <div class="card-corner bottom">
+            ${text}
+        </div>
+
+    `;
+
+    return el;
+}
+
+
+
+function updateTurnIndicator(){
+
+    const indicator =
+        document.getElementById("turn-indicator");
+
+    if(!indicator){
+        return;
+    }
+
+    if(gameOver){
+        indicator.textContent = "ラウンド終了";
+        return;
+    }
+
+    if(!gameStarted){
+        indicator.textContent = "現在のターン：ゲーム開始待ち";
+        return;
+    }
+
+    const player = players[currentPlayer];
+
+    if(!player){
+        indicator.textContent = "現在のターン：—";
+        return;
+    }
+
+    indicator.textContent =
+        `現在のターン：${player.name}`;
+}
+
+function render(){
+
+    updateTurnIndicator();
+
+    playerHandEl.innerHTML = "";
+
+    const localRenderSlot = onlineMode ? onlinePlayerSlot : 0;
+    const player =
+        players[localRenderSlot];
+
+    player.hand.forEach(
+        (card,index) => {
+
+            const el =
+                createCardElement(
+                    card
+                );
+
+            el.classList.add(
+                "player-card"
+            );
+
+            if(
+                currentPlayer!==localRenderSlot ||
+                awaitingColor ||
+                !gameStarted ||
+                !canPlay(card)
+            ){
+
+                el.classList.add(
+                    "unplayable"
+                );
+
+            }else{
+
+                el.classList.add(
+                    "playable"
+                );
+            }
+
+            el.addEventListener(
+                "click",
+                () => {
+                    if(onlineMode && !onlineIsHost){
+                        onlineSend(onlineConnections.host,{type:"action",action:"play",index});
+                    }else{
+                        playerPlay(index,localRenderSlot);
+                    }
+                }
+            );
+
+            playerHandEl.appendChild(
+                el
+            );
+        }
+    );
+
+    for(let i=1; i<=3; i++){
+
+        const cpu =
+            players[i];
+
+        const handEl =
+            cpuHands[i-1];
+
+        const cpuContainer =
+            handEl.closest(".cpu-player") ||
+            handEl.closest(".cpu-top");
+
+        if(cpuContainer){
+            cpuContainer.style.display =
+                i <= (onlineMode ? onlinePlayerCount - 1 : cpuCount) ? "" : "none";
+        }
+
+        handEl.innerHTML = "";
+
+        cpu.hand.forEach(() => {
+
+            handEl.appendChild(
+                createCardElement(
+                    null,
+                    true
+                )
+            );
+
+        });
+
+        cpuCounts[i-1].textContent =
+            cpu.hand.length;
+    }
+
+    discardCardEl.innerHTML = "";
+
+    const top =
+        getTopCard();
+
+    if(top){
+
+        const topElement =
+            createCardElement(
+                top
+            );
+
+        /*
+         * ワイルド系は現在選択された色を
+         * 場のカードにも反映
+         */
+        if(
+            top.type==="wild" ||
+            top.type==="draw4"
+        ){
+
+            if(top.type==="wild"){
+                topElement.classList.add("wild-display");
+            }
+
+            topElement.classList.remove(
+                "black",
+                "red",
+                "yellow",
+                "green",
+                "blue"
+            );
+
+            if(currentColor){
+
+                topElement.classList.add(
+                    currentColor
+                );
+
+            }else{
+
+                topElement.classList.add(
+                    "black"
+                );
+            }
+        }
+
+        discardCardEl.appendChild(
+            topElement
+        );
+    }
+
+    deckCardEl.innerHTML = "";
+
+    deckCardEl.appendChild(
+        createCardElement(
+            null,
+            true
+        )
+    );
+
+    playerCountEl.textContent =
+        player.hand.length;
+
+    deckCountEl.textContent =
+        deck.length;
+
+    discardCountEl.textContent =
+        discardPile.length;
+
+    const exodiaCount =
+        player.hand.filter(
+            card =>
+                card.type==="exodia"
+        ).length;
+
+    exodiaCountEl.textContent =
+        `${exodiaCount} / 5`;
+
+    if(gameStarted){
+
+        turnTextEl.textContent =
+            players[currentPlayer].name;
+
+    }else{
+
+        turnTextEl.textContent =
+            gameOver
+                ? "終了"
+                : "準備中";
+    }
+
+    currentColorTextEl.textContent =
+        currentColor
+            ? ` / ${COLOR_NAMES[currentColor]}`
+            : "";
+
+    drawButton.disabled =
+        !gameStarted ||
+        gameOver ||
+        currentPlayer!==0 ||
+        awaitingColor;
+
+    const playerHasPlayableCard =
+        player.hand.some(card => canPlay(card));
+
+    unoButton.disabled =
+        !gameStarted ||
+        gameOver ||
+        currentPlayer!==0 ||
+        playerSaidUno ||
+        unoPenaltyApplied ||
+        unoProcessing;
+}
+
+
+function showEffect(
+    text,
+    color
+){
+
+    const el =
+        document.createElement(
+            "div"
+        );
+
+    el.className =
+        "effect-text";
+
+    el.textContent =
+        text;
+
+    el.style.color =
+        color;
+
+    effectLayer.appendChild(
+        el
+    );
+
+    setTimeout(() => {
+
+        el.remove();
+
+    },1200);
+}
+
+
+function shakeScreen(){
+
+    const game =
+        document.getElementById(
+            "game"
+        );
+
+    game.classList.add(
+        "shake"
+    );
+
+    setTimeout(() => {
+
+        game.classList.remove(
+            "shake"
+        );
+
+    },500);
+}
+
+
+function showMessage(text){
+
+    messageEl.textContent =
+        text;
+}
+
+
+const mainMenuOverlay = document.getElementById("mainMenuOverlay");
+const settingsOverlay = document.getElementById("settingsOverlay");
+const mainGameStartButton = document.getElementById("mainGameStartButton");
+const settingsButton = document.getElementById("settingsButton");
+const settingsBackButton = document.getElementById("settingsBackButton");
+
+
+function onlineSetStatus(message){
+    const el=document.getElementById("onlineStatus");
+    if(el) el.textContent=message;
+
+    if(onlineMode && onlineIsHost){
+        clearTimeout(window.__onlineBroadcastTimer);
+        window.__onlineBroadcastTimer=setTimeout(onlineBroadcastState,20);
+    }
+
+}
+
+function onlineCloseConnections(){
+    Object.values(onlineConnections).forEach(c=>{ try{c.close();}catch(e){} });
+    onlineConnections={};
+    if(onlinePeer){ try{onlinePeer.destroy();}catch(e){} }
+    onlinePeer=null;
+    onlineReady=false;
+}
+
+function onlineSetPlayerList(){
+    const list=document.getElementById("onlinePlayerList");
+    if(!list) return;
+    list.innerHTML="";
+    for(let i=0;i<onlinePlayerCount;i++){
+        const li=document.createElement("li");
+        li.textContent=`${i===0 ? "👑 " : ""}${players[i].name}`;
+        list.appendChild(li);
+    }
+}
+
+function onlineShowRoom(){
+    document.getElementById("onlineHomePanel").classList.add("hidden");
+    document.getElementById("onlineRoomPanel").classList.remove("hidden");
+    document.getElementById("onlineRoomCode").textContent=onlineRoomCode;
+    document.getElementById("onlineRoleText").textContent=onlineIsHost ? "あなたがホストです。最大4人まで参加できます。" : `参加中：${players[onlinePlayerSlot].name}`;
+    document.getElementById("onlineStartButton").style.display=onlineIsHost ? "" : "none";
+    onlineSetPlayerList();
+}
+
+function onlineSend(conn,msg){
+    if(conn && conn.open){ conn.send(msg); }
+}
+
+function onlineBroadcast(msg){
+    Object.values(onlineConnections).forEach(c=>onlineSend(c,msg));
+}
+
+function onlineSerializeState(){
+    return {
+        deck, discardPile, currentPlayer, direction, currentColor, pendingDraw,
+        pendingDrawSourceId: pendingDrawSource ? pendingDrawSource.id : null,
+        gameStarted, gameOver, awaitingColor, rouletteRunning, playerSaidUno,
+        unoPenaltyApplied, unoProcessing, exodiaReturnCard, onlinePlayerCount,
+        players: players.map(p=>({id:p.id,name:p.name,type:p.type,hand:p.hand,finished:p.finished}))
+    };
+}
+
+function onlineApplyState(st){
+    if(!st) return;
+    deck=st.deck||[];
+    discardPile=st.discardPile||[];
+    currentPlayer=Number.isInteger(st.currentPlayer)?st.currentPlayer:0;
+    direction=st.direction||1;
+    currentColor=st.currentColor||null;
+    pendingDraw=st.pendingDraw||0;
+    pendingDrawSource = st.pendingDrawSourceId==null ? null : players[st.pendingDrawSourceId];
+    gameStarted=!!st.gameStarted;
+    gameOver=!!st.gameOver;
+    awaitingColor=!!st.awaitingColor;
+    rouletteRunning=!!st.rouletteRunning;
+    playerSaidUno=!!st.playerSaidUno;
+    unoPenaltyApplied=!!st.unoPenaltyApplied;
+    unoProcessing=!!st.unoProcessing;
+    exodiaReturnCard=st.exodiaReturnCard||null;
+    onlinePlayerCount=st.onlinePlayerCount||onlinePlayerCount;
+    (st.players||[]).forEach((p,i)=>{
+        if(!players[i]) return;
+        players[i].id=p.id; players[i].name=p.name; players[i].type=p.type; players[i].hand=p.hand||[]; players[i].finished=!!p.finished;
+    });
+    document.getElementById("onlineBadge").style.display="block";
+    if(onlineMode && !onlineIsHost){
+        if(st.gameStarted){
+            rouletteOverlay.classList.add("hidden");
+            onlineOverlay.classList.add("hidden");
+        }else if(st.rouletteRunning){
+            rouletteOverlay.classList.remove("hidden");
+            rouletteName.textContent="ホストが決定中…";
+        }
+    }
+    render();
+    if(gameStarted && currentPlayer===onlinePlayerSlot && !gameOver){
+        showMessage("あなたのターンです。");
+    }
+}
+
+function onlineBroadcastState(){
+    if(!onlineMode || !onlineIsHost) return;
+    onlineBroadcast({type:"state",state:onlineSerializeState()});
+}
+
+function onlineHandleMessage(slot,data){
+    if(!data) return;
+    if(onlineIsHost){
+        if(data.type==="action"){
+            if(!gameStarted || gameOver || currentPlayer!==slot) return;
+            if(data.action==="play") playerPlay(Number(data.index),slot);
+            else if(data.action==="draw") playerDraw(slot);
+            else if(data.action==="uno") playerUno(slot);
+            else if(data.action==="color") selectColor(data.color,slot);
+            onlineBroadcastState();
+        }
+        return;
+    }
+    if(data.type==="state") onlineApplyState(data.state);
+    if(data.type==="room-full") onlineSetStatus("この部屋は満員です。");
+    if(data.type==="host-started") onlineSetStatus("ゲームを開始しています…");
+}
+
+function onlineCreateRoom(){
+    if(typeof Peer === "undefined"){
+        onlineSetStatus("通信ライブラリを読み込めませんでした。ページを再読み込みしてください。");
+        return;
+    }
+
+    onlineName=(document.getElementById("onlineNameInput").value.trim()||"プレイヤー").slice(0,12);
+    onlineCloseConnections();
+    onlineMode=true; onlineIsHost=true; onlinePlayerSlot=0; onlinePlayerCount=1; onlineReady=false;
+
+    players.forEach((p,i)=>{
+        p.hand=[];
+        p.finished=false;
+        p.type=i===0?"human":"cpu";
+        p.name=i===0?onlineName:`CPU ${i}`;
+    });
+
+    /*
+     * ルームコードは通信確立を待たず、この時点で即発行する。
+     * これによりPeerJSサーバーが混雑していてもコードをすぐ共有できる。
+     */
+    let generatedCode="";
+    for(let attempt=0; attempt<8; attempt++){
+        generatedCode=Math.random().toString(36).slice(2,8).toUpperCase();
+        if(generatedCode.length===6) break;
+    }
+    onlineRoomCode=generatedCode;
+
+    /* まず画面をルーム表示に切り替える */
+    document.getElementById("onlineHomePanel").classList.add("hidden");
+    document.getElementById("onlineRoomPanel").classList.remove("hidden");
+    document.getElementById("onlineRoomCode").textContent=onlineRoomCode;
+    document.getElementById("onlineRoleText").textContent="ホストとして接続中…";
+    document.getElementById("onlinePlayerList").innerHTML="<li>👑 "+onlineName+"</li>";
+    document.getElementById("onlineStartButton").disabled=true;
+    document.getElementById("onlineBadge").style.display="block";
+    onlineSetStatus("ルームコードを作成しました。通信を接続しています…");
+
+    const peerId = generatedCode.toLowerCase();
+    let opened=false;
+    let finished=false;
+
+    try{
+        onlinePeer=new Peer(peerId,{debug:0,host:"0.peerjs.com",port:443,path:"/"});
+    }catch(err){
+        onlineSetStatus("ルームコードは発行済みですが、通信の開始に失敗しました。ページを再読み込みしてください。");
+        document.getElementById("onlineRoleText").textContent="通信開始失敗";
+        return;
+    }
+
+    const connectionTimeout=setTimeout(()=>{
+        if(!opened && !finished){
+            onlineSetStatus("コードは使用できます。通信接続に時間がかかっています。少し待っても接続しない場合は再作成してください。");
+            document.getElementById("onlineRoleText").textContent="通信待機中";
+        }
+    },5000);
+
+    onlinePeer.on("open",id=>{
+        opened=true;
+        clearTimeout(connectionTimeout);
+        onlineRoomCode=generatedCode;
+        document.getElementById("onlineRoomCode").textContent=onlineRoomCode;
+        onlineSetStatus("部屋を作りました。友達にルームコードを送ってください。");
+        onlineReady=true;
+        document.getElementById("onlineRoleText").textContent="ホスト";
+        document.getElementById("onlineStartButton").disabled=true;
+        onlineSetPlayerList();
+        onlinePeer.__fullId=id;
+    });
+
+    onlinePeer.on("connection",conn=>{
+        if(onlinePlayerCount>=4){
+            onlineSend(conn,{type:"room-full"});
+            conn.close();
+            return;
+        }
+        const slot=onlinePlayerCount++;
+        onlineConnections[slot]=conn;
+        conn.on("open",()=>{
+            onlineSend(conn,{type:"assign",slot,room:onlineRoomCode,hostId:onlinePeer.__fullId||peerId});
+        });
+        conn.on("data",data=>{
+            if(data.type==="hello"){
+                players[slot].type="human";
+                players[slot].name=(data.name||`プレイヤー${slot+1}`).slice(0,12);
+                onlineSetPlayerList();
+                onlineSend(conn,{type:"state",state:onlineSerializeState(),slot});
+                onlineSetStatus(`${onlinePlayerCount}人が参加しています。`);
+                document.getElementById("onlineStartButton").disabled = onlinePlayerCount < 2;
+            }else{
+                onlineHandleMessage(slot,data);
+            }
+        });
+        conn.on("close",()=>{
+            players[slot].name=`プレイヤー${slot+1}（切断）`;
+            players[slot].finished=true;
+            onlineSetPlayerList();
+        });
+    });
+
+    onlinePeer.on("error",err=>{
+        finished=true;
+        clearTimeout(connectionTimeout);
+        const type = err && err.type ? err.type : "unknown";
+        if(type === "unavailable-id"){
+            onlineSetStatus("このコードは使用中でした。『部屋を作る』でもう一度作成してください。");
+        }else if(type === "network" || type === "server-error" || type === "socket-error"){
+            onlineSetStatus("コードは発行済みですが、オンラインサーバーに接続できません。インターネット接続を確認してください。");
+        }else{
+            onlineSetStatus("コードは発行済みですが、通信エラーが発生しました："+type);
+        }
+        document.getElementById("onlineRoleText").textContent = "通信エラー";
+    });
+}
+function onlineJoinRoom(){
+    if(typeof Peer === "undefined"){
+        onlineSetStatus("オンライン機能の読み込みに失敗しました。インターネット接続を確認してください。");
+        return;
+    }
+    onlineName=(document.getElementById("onlineNameInput").value.trim()||"プレイヤー").slice(0,12);
+    const code=document.getElementById("onlineRoomInput").value.trim().toUpperCase().replace(/\s/g,"");
+    if(!code){ onlineSetStatus("ルームコードを入力してください。"); return; }
+    if(!/^[A-Z0-9]{6}$/.test(code)){
+        onlineSetStatus("ルームコードは6文字で入力してください。");
+        return;
+    }
+
+    onlineCloseConnections();
+    onlineMode=true; onlineIsHost=false; onlineReady=false;
+    onlineRoomCode=code;
+    document.getElementById("onlineHomePanel").classList.add("hidden");
+    document.getElementById("onlineRoomPanel").classList.remove("hidden");
+    document.getElementById("onlineRoomCode").textContent=code;
+    document.getElementById("onlineRoleText").textContent="ホストへ接続中…";
+    document.getElementById("onlinePlayerList").innerHTML="<li>接続しています…</li>";
+    document.getElementById("onlineStartButton").style.display="none";
+    onlineSetStatus("部屋を探しています…");
+
+    const target=code.toLowerCase();
+    let joinFinished=false;
+    const joinTimeout=setTimeout(()=>{
+        if(joinFinished) return;
+        joinFinished=true;
+        onlineSetStatus("部屋に接続できませんでした。ホストが部屋を開いたままか、コードが正しいか確認してください。");
+        document.getElementById("onlineRoleText").textContent="接続失敗";
+    },10000);
+
+    try{
+        onlinePeer=new Peer({debug:0,host:"0.peerjs.com",port:443,path:"/"});
+    }catch(err){
+        clearTimeout(joinTimeout);
+        onlineSetStatus("オンライン通信を開始できませんでした。");
+        document.getElementById("onlineRoleText").textContent="通信開始失敗";
+        return;
+    }
+
+    onlinePeer.on("open",()=>{
+        if(joinFinished) return;
+        onlineSetStatus("ホストへ接続しています…");
+        const conn=onlinePeer.connect(target,{reliable:true,serialization:"json"});
+        onlineConnections.host=conn;
+
+        conn.on("open",()=>{
+            if(joinFinished) return;
+            onlineSend(conn,{type:"hello",name:onlineName});
+        });
+        conn.on("data",data=>{
+            if(!data) return;
+            if(data.type==="assign"){
+                joinFinished=true;
+                clearTimeout(joinTimeout);
+                onlinePlayerSlot=Number(data.slot);
+                onlinePlayerCount=Math.max(onlinePlayerCount,onlinePlayerSlot+1);
+                onlineRoomCode=data.room||code;
+                players[onlinePlayerSlot].name=onlineName;
+                onlineShowRoom();
+                onlineSetStatus("参加しました。ホストがゲームを開始するまで待ってください。");
+            } else {
+                onlineHandleMessage(0,data);
+            }
+        });
+        conn.on("close",()=>{
+            if(!joinFinished){
+                clearTimeout(joinTimeout);
+                joinFinished=true;
+                onlineSetStatus("ホストとの接続が切れました。ホストが部屋を開いているか確認してください。");
+                document.getElementById("onlineRoleText").textContent="接続失敗";
+            } else {
+                onlineSetStatus("ホストとの接続が切れました。");
+            }
+        });
+        conn.on("error",err=>{
+            if(joinFinished) return;
+            clearTimeout(joinTimeout);
+            joinFinished=true;
+            onlineSetStatus("ルームに接続できませんでした。ホストが部屋を開いたままか、コードを確認してください。");
+            document.getElementById("onlineRoleText").textContent="接続失敗";
+        });
+    });
+    onlinePeer.on("error",err=>{
+        if(joinFinished) return;
+        clearTimeout(joinTimeout);
+        joinFinished=true;
+        const type=err && err.type ? err.type : "unknown";
+        if(type==="peer-unavailable"){
+            try{ if(onlinePeer) onlinePeer.destroy(); }catch(e){}
+            onlineConnections={};
+            onlineSetStatus("そのルームは見つかりません。ホストが部屋を作った状態で、6文字のコードを入力してください。");
+        }else if(type==="network" || type==="server-error" || type==="socket-error"){
+            onlineSetStatus("オンラインサーバーに接続できません。両方の端末でインターネット接続を確認してください。");
+        }else{
+            onlineSetStatus("ルームに接続できませんでした（"+type+"）。");
+        }
+        document.getElementById("onlineRoleText").textContent="接続失敗";
+    });
+}
+
+function onlineStartGame(){
+    if(!onlineIsHost || onlinePlayerCount<2 || onlineStarting) return;
+    onlineStarting=true;
+    cpuCount=onlinePlayerCount-1;
+    document.getElementById("onlineStartButton").disabled=true;
+    onlineSetStatus("ゲームを準備しています…");
+    onlineOverlay.classList.add("hidden");
+    rouletteOverlay.classList.remove("hidden");
+    rouletteName.textContent="?";
+    initializeGame();
+    onlineBroadcastState();
+}
+
+function onlineActuallyStart(){
+    onlineStarting=false;
+    document.getElementById("onlineStartButton").disabled=false;
+    onlineOverlay.classList.add("hidden");
+    rouletteOverlay.classList.remove("hidden");
+    rouletteName.textContent="?";
+    initializeGame();
+    onlineBroadcastState();
+}
+
+function openOnlineMenu(){
+    mainMenuOverlay.classList.add("hidden");
+    settingsOverlay.classList.add("hidden");
+    onlineOverlay.classList.remove("hidden");
+    document.getElementById("onlineHomePanel").classList.remove("hidden");
+    document.getElementById("onlineRoomPanel").classList.add("hidden");
+    onlineSetStatus("部屋を作るか、ルームコードで参加してください。");
+}
+
+function leaveOnline(){
+    onlineCloseConnections();
+    onlineMode=false; onlineIsHost=false; onlinePlayerSlot=0; onlinePlayerCount=1;
+    onlineOverlay.classList.add("hidden");
+    mainMenuOverlay.classList.remove("hidden");
+    gameStarted=false; gameOver=false;
+    document.getElementById("onlineBadge").style.display="none";
+}
+
+function openGameFromMenu(){
+    menuOverlay.classList.add("hidden");
+    mainMenuOverlay.classList.remove("hidden");
+}
+
+function openGameStart(){
+    onlineMode=false;
+    mainMenuOverlay.classList.add("hidden");
+    settingsOverlay.classList.add("hidden");
+    rouletteOverlay.classList.remove("hidden");
+    rouletteName.textContent = "?";
+}
+
+function openSettings(){
+    mainMenuOverlay.classList.add("hidden");
+    settingsOverlay.classList.remove("hidden");
+}
+
+function closeSettings(){
+    settingsOverlay.classList.add("hidden");
+    mainMenuOverlay.classList.remove("hidden");
+}
+
+function applyCpuCount(){
+    const value = Number(cpuCountSelect.value);
+    if(value >= 1 && value <= 3){
+        cpuCount = value;
+    }
+}
+
+cpuCountSelect.addEventListener("change", applyCpuCount);
+
+
+function startRoulette(){
+
+    if(onlineMode && !onlineIsHost){ return; }
+
+    if(rouletteRunning){
+        return;
+    }
+
+    rouletteRunning = true;
+
+    let count = 0;
+
+    const max =
+        22 +
+        Math.floor(
+            Math.random()*12
+        );
+
+    const interval =
+        setInterval(() => {
+
+            rouletteName.textContent =
+                players[
+                    count % (onlineMode ? onlinePlayerCount : cpuCount + 1)
+                ].name;
+
+            count++;
+
+            if(count>=max){
+
+                clearInterval(
+                    interval
+                );
+
+                currentPlayer =
+                    Math.floor(
+                        Math.random()*(onlineMode ? onlinePlayerCount : cpuCount + 1)
+                    );
+
+                rouletteName.textContent =
+                    players[
+                        currentPlayer
+                    ].name;
+
+                setTimeout(() => {
+
+                    onlineStarting=false;
+                    document.getElementById("onlineBadge").style.display=onlineMode ? "block" : "none";
+                    rouletteOverlay
+                        .classList
+                        .add("hidden");
+
+                    gameStarted = true;
+
+                    gameOver = false;
+
+                    resetUnoState();
+
+                    showMessage(
+                        `${players[currentPlayer].name}からスタート！`
+                    );
+
+                    render();
+
+                    rouletteRunning =
+                        false;
+
+                    startCurrentTurn();
+
+                },900);
+            }
+
+        },90);
+}
+
+
+function returnToMainMenu(){
+
+    if(onlineMode){
+        leaveOnline();
+        return;
+    }
+
+    if(cpuTimer){
+
+        clearTimeout(cpuTimer);
+
+        cpuTimer = null;
+    }
+
+    gameStarted = false;
+    gameOver = false;
+    rouletteRunning = false;
+    cpuProcessing = false;
+    unoProcessing = false;
+
+    winOverlay.classList.add("hidden");
+    colorOverlay.classList.add("hidden");
+    rouletteOverlay.classList.add("hidden");
+    settingsOverlay.classList.add("hidden");
+    menuOverlay.classList.add("hidden");
+    mainMenuOverlay.classList.remove("hidden");
+
+    resetUnoState();
+    showMessage("メニューからゲームを開始してください");
+    render();
+}
+
+
+function restartGame(){
+
+    if(cpuTimer){
+
+        clearTimeout(cpuTimer);
+
+        cpuTimer = null;
+    }
+
+    winOverlay
+        .classList
+        .add("hidden");
+
+    colorOverlay
+        .classList
+        .add("hidden");
+
+    rouletteOverlay
+        .classList
+        .remove("hidden");
+
+    winBox
+        .classList
+        .remove("exodia-win");
+
+    winTitle
+        .classList
+        .remove("exodia-win-title");
+
+    rouletteName.textContent =
+        "?";
+
+    playerSaidUno = false;
+
+    unoPenaltyApplied = false;
+
+    unoProcessing = false;
+
+    cpuProcessing = false;
+
+    initializeGame();
+}
+
+
+menuStartButton.addEventListener(
+    "click",
+    openGameFromMenu
+);
+
+mainGameStartButton.addEventListener("click", openGameStart);
+settingsButton.addEventListener("click", openSettings);
+settingsBackButton.addEventListener("click", closeSettings);
+
+
+document.getElementById("onlineButton").addEventListener("click", openOnlineMenu);
+document.getElementById("onlineHostButton").addEventListener("click", onlineCreateRoom);
+document.getElementById("onlineJoinButton").addEventListener("click", onlineJoinRoom);
+document.getElementById("onlineBackButton").addEventListener("click", leaveOnline);
+document.getElementById("onlineLeaveButton").addEventListener("click", leaveOnline);
+document.getElementById("onlineStartButton").addEventListener("click", onlineStartGame);
+
+document
+    .getElementById("rouletteStart")
+    .addEventListener(
+        "click",
+        startRoulette
+    );
+
+drawButton.addEventListener(
+    "click",
+    () => {
+        if(onlineMode && !onlineIsHost){
+            onlineSend(onlineConnections.host,{type:"action",action:"draw"});
+        }else{
+            playerDraw(onlineMode ? onlinePlayerSlot : 0);
+        }
+    }
+);
+
+
+unoButton.addEventListener(
+    "click",
+    () => {
+        if(onlineMode && !onlineIsHost){
+            onlineSend(onlineConnections.host,{type:"action",action:"uno"});
+        }else{
+            playerUno(onlineMode ? onlinePlayerSlot : 0);
+        }
+    }
+);
+
+restartButton.addEventListener(
+    "click",
+    restartGame
+);
+
+backToMenuButton.addEventListener(
+    "click",
+    returnToMainMenu
+);
+
+document
+    .getElementById("winRestart")
+    .addEventListener(
+        "click",
+        restartGame
+);
+
+document
+    .querySelectorAll(".color-button")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                if(onlineMode && !onlineIsHost){
+                    onlineSend(onlineConnections.host,{type:"action",action:"color",color:button.dataset.color});
+                    return;
+                }
+
+                selectColor(
+                    button.dataset.color,
+                    onlineMode ? onlinePlayerSlot : 0
+                );
+
+            }
+        );
+
+    });
+
+// 招待リンクからルームコードを自動取得して参加画面を開く
+(function(){
+    try{
+        const params=new URLSearchParams(window.location.search);
+        const inviteCode=(params.get("room")||params.get("invite")||"").trim().toUpperCase().replace(/\s/g,"");
+        if(inviteCode){
+            const input=document.getElementById("onlineRoomInput");
+            if(input) input.value=inviteCode;
+            setTimeout(()=>{
+                if(typeof openOnlineMenu === "function") openOnlineMenu();
+                setTimeout(()=>{
+                    const join=document.getElementById("onlineJoinButton");
+                    if(join) join.click();
+                },120);
+            },150);
+        }
+    }catch(e){}
+})();
+
+// 現在のルームコードから招待リンクを作成
+function getRoomInviteLink(){
+    if(!onlineRoomCode) return "";
+    const base=window.location.href.split("?")[0].split("#")[0];
+    return base+"?room="+encodeURIComponent(onlineRoomCode);
+}
+
+applyCpuCount();
+document.getElementById("onlineBadge").style.display="none";
+initializeGame();
+
+menuOverlay.classList.remove("hidden");
+rouletteOverlay.classList.add("hidden");
+
+</script>
+
+</body>
+</html>
